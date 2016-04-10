@@ -1,11 +1,17 @@
+#ifndef BASIS_H
+#define BASIS_H
+
+#include "libhead.h"
 
 class basis
 {
     public:
-        basis(mat& Theta);
-        ~basis();
+        basis();
+       ~basis();
 
-        mat Theta;
-    protected:
-    private:
+        void Phi(rowvec &x, colvec &phi, mat &theta);
+        void dPhi_dtheta(rowvec &x, mat &theta, colvec &phi, mat &dphi);
+        void dPhi_dtheta(rowvec &x, mat &theta, mat &dphi);
 };
+
+#endif // BASIS_H

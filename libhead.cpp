@@ -67,7 +67,7 @@ double grand() // Marsaglia polar method -- generate a sample from N(0, 1)
     return u * sqrt(-2 * log(s) / s);
 }
 
-vec multi_gaussian_random(vec &mean, mat &cov) // generate a sample from N(mean, cov)
+void multi_gaussian_random(vec &mean, mat &cov, vec &x) // generate a sample from N(mean, cov)
 {
     mat L = chol(cov, "lower");
     int N = (int) mean.n_elem;
@@ -75,31 +75,51 @@ vec multi_gaussian_random(vec &mean, mat &cov) // generate a sample from N(mean,
     vec z = zeros <vec> (N); z.fill(0.0);
     for (int i = 0; i < N; i++) z(i) = GRAND(0, 1);
 
-    vec x = zeros <vec> (N); x.fill(0.0);
+    x = zeros <vec> (N); x.fill(0.0);
     for (int i = 0; i < N; i++)
     {
         x(i)= mean(i);
         for (int j = 0; j < N; j++) x(i) += (L(i, j) * z(j));
     }
-
-    return x;
 }
 
-mat multi_gaussian_random(vec &mean, mat &cov, int N) // generate N samples independently from N(mean, cov)
+void multi_gaussian_random(vec &mean, mat &cov, int N, mat &res) // generate N samples independently from N(mean, cov)
 {
-    mat X(N, mean.n_elem);
+    res = mat(N, mean.n_elem);
     for (int i = 0; i < N; i++)
     {
         vec sample = multi_gaussian_random(mean, cov);
-        for (int j = 0; j < mean.n_elem; j++) X(i, j) = sample(j);
+        for (int j = 0; j < mean.n_elem; j++) res(i, j) = sample(j);
     }
-    return X;
 }
 
-vec grand(double mean, double sigma, int N) // generate N samples independently from N(mean, sigma^2)
+void grand(double mean, double sigma, int N, vec &x) // generate N samples independently from N(mean, sigma^2)
 {
-    vec x = zeros <vec> (N);
+    x = zeros <vec> (N);
     for (int i = 0; i < N; i++)
         x(i) = GRAND(mean, sigma);
-    return x;
 }
+
+void vectorise(mat &theta, vec &s, vec &res)
+{
+    int t_r   = theta.n_rows;
+    int t_c   = theta.n_cols;
+    int s_r   = s.n_rows;
+    int index = 0;
+
+    res = vec(s_r + t_r * t_c);
+
+    NFOR(i, j, t_c, t_r) res(index++) = theta(j, i);
+    SFOR(i, s_r) res(index++) = s(i);
+}
+
+void unvectorise(mat &theta, vec &s, vec &res, int t_r, int t_c)
+{
+    int s_r   = res.n_rows - t_r * t_c;
+    int index = 0;
+
+    NFOR(i, j, t_c, t_r) theta(j, i) = res(index++);
+    SFOR(i, s_r) s(i) = res(index++);
+}
+
+

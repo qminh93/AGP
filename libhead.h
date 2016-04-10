@@ -94,10 +94,10 @@ void c2v (colvec &C, vd  &result); // ARMA colvec to C++ vector
 void v2m (vvd    &A, mat &result); // C++ vvd to ARMA mat structure
 void shuffle(char* original, char* sample, int nTotal, int nSample); // randomly extract nSample data points from the original data file and put them in sample file
 
-mat multi_gaussian_random(vec &mean, mat &cov, int N); // generate N samples independently from N(mean, cov)
-vec multi_gaussian_random(vec &mean, mat &cov); // sample a multivariate sample from N(mean, cov)
+void multi_gaussian_random(vec &mean, mat &cov, int N, mat &res); // generate N samples independently from N(mean, cov)
+void multi_gaussian_random(vec &mean, mat &cov, vec &x); // sample a multivariate sample from N(mean, cov)
+void grand(double mean, double sigma, int N, vec &x); // generate n samples from N(mean, sigma^2)
 double grand();
- // Marsaglia polar method -- generate a sample from N(0, 1^2)
-vec grand(double mean, double sigma, int N); // generate n samples from N(mean, sigma^2)
+
 
 #endif /* LIBHEAD_H_ */

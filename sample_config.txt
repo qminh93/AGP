@@ -1,0 +1,22 @@
+/* DATA SETTINGS */
+// comments
+./aimpeak.csv ./aimpeak_result.txt
+41800 100 1
+418 200 0.05
+/* LEARNING SETTINGS */
+// comments
+10
+1.0 1.0 0.0 1.0
+1.0 1.0 0.0 1.0
+/* PREDICTION SETTINGS */
+// comments
+1 1 1
+/* BASIS SETTINGS */
+// comments
+5
+/* HYPER SETTINGS */
+// comments
+1.0 1.0 1.0
+/* VARIATIONAL SETTINGS */
+// comments
+1.0 1.0 1.0 

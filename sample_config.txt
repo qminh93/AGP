@@ -16,7 +16,7 @@
 5
 /* HYPER SETTINGS */
 // comments
-1.0 1.0 1.0
+0.0 0.0 0.0
 /* VARIATIONAL SETTINGS */
 // comments
-1.0 1.0 1.0 
+0.0 0.0 0.0 

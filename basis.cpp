@@ -1,5 +1,6 @@
 #include "basis.h"
 
+
 basis::basis()
 {
     //ctor
@@ -12,7 +13,7 @@ basis::~basis()
 
 void basis::Phi(rowvec &x, colvec &phi, mat &theta)
 {
-    phi = colvec(2 * theta.n_cols, 0);
+    phi = colvec(2 * theta.n_cols);
 
     SFOR(i, theta.n_cols)
     {
@@ -24,7 +25,7 @@ void basis::Phi(rowvec &x, colvec &phi, mat &theta)
 
 void basis::dPhi_dtheta(rowvec &x, mat &theta, colvec &phi, mat &dphi)
 {
-    dphi = zeros <mat> (2 * theta.n_cols, x.n_rows);
+    dphi = zeros <mat> (x.n_elem, 2 * theta.n_cols);
 
     SFOR(i, theta.n_cols)
     {

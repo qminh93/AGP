@@ -8,7 +8,7 @@
 #include "configuration.h"
 #include "predictor.h"
 
-#define DEFAULT_NO_SAMPLE 100
+#define DEFAULT_NO_SAMPLE 1000
 
 class optimizer
 {
@@ -23,8 +23,8 @@ class optimizer
         stograd* gradient;
         predictor* model;
 
-        vec eta, b, z_mean;
-        mat M, z_cov;
+        vec eta, b, z_mean, db;
+        mat M, z_cov, dM;
 
         void initialize();
         pair <double, double> learning_rate(int nIter);

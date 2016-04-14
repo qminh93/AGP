@@ -1,4 +1,5 @@
 #include "stograd.h"
+#define DEBUG 0
 
 stograd::stograd(OrganizedData* od, int nBasis)
 {
@@ -13,7 +14,7 @@ stograd::~stograd()
     b.clear();
 }
 
-void stodgrad::compute_dalpha_dM(vec &z)
+void stograd::compute_dalpha_dM(vec &z)
 {
     SFOR(k, z.n_rows)
     {
@@ -26,7 +27,7 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res)
 {
     unvectorise(M, b, eta, M_r, M_c);
 
-    res = vec(eta.n_rows, 0);
+    res = vec(eta.n_rows);
     int nz = Z.n_cols, nk = K.n_rows;
 
     SFOR(i, nz)
@@ -40,13 +41,12 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res)
         compute_dalpha_dM(z);
 
         // Extract from alpha
-        mat theta;
-        vec s;
-        unvectorise(theta, s, alpha, od->nDim, nBasis)
+        mat theta; vec s;
+        unvectorise(theta, s, alpha, od->nDim, nBasis);
 
         SFOR(j, nk)
         {
-            vec Fkz, dlogqp;
+            vec Fkz;
             compute_F(theta, s, K(j), Fkz);
             compute_dlogqp(theta, s, K(j));
             res += od->nBlock * Fkz - dlogqp;
@@ -57,39 +57,47 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res)
     res = (1.0 / (nz * nk)) * res;
 }
 
-void stograd::compute_dlogqp(mat &theta, mat &M, vec &s, int k)
+void stograd::compute_dlogqp(mat &theta, vec &s, int k)
 {
-    int alpha_size = theta.n_rows * theta.n_cols + s.n_rows;
-    dlogqp = - inv(M).t();
+    mat dlogqp_dM = - inv(M).t();
+    vec dlogqp_db(M.n_rows);
 
     int count = 0;
 
-    NFOR(tr, tc, theta.n_rows, theta.n_cols) dlogqp -= theta(tc, tr) * dalpha[count++];
-    SFOR(i, s.n_rows) dlogqp -= ((double)nBasis / (double)od->bSize) * s(i) * dalpha[count++];
+    NFOR(tc, tr, theta.n_cols, theta.n_rows)
+    {
+        dlogqp_db[count] = theta(tr, tc);
+        dlogqp_dM -= theta(tr, tc) * dalpha[count++];
+    }
+    SFOR(i, s.n_rows)
+    {
+        dlogqp_db[count] = ((double)nBasis / (double)od->bSize) * s(i);
+        dlogqp_dM -= ((double)nBasis / (double)od->bSize) * s(i) * dalpha[count++];
+    }
+
+    vectorise(dlogqp_dM, dlogqp_db, dlogqp);
 }
 
 void stograd::compute_F(mat &theta, vec &s, int k, vec &Fkz)
 {
-    vec vk, dvk;
-
-    compute_vk(k, theta, s, vk);
-    compute_dvk(k, theta, s, dvk);
+    compute_vk(k, theta, s);
+    compute_dvk(k, theta, s);
     compute_rk();
-
     Fkz = -0.5 * rk;
 }
 
 void stograd::compute_vk(int k, mat &theta, vec &s)
 {
-    vk = vec(od->bSize); vec phi;
+    colvec phi;
+
+    vk = vec(od->bSize);
     mat* xk = od->getxb(k);
     mat* yk = od->getyb(k);
-
     SFOR(i, od->bSize)
     {
         rowvec xki = xk->row(i);
-        basis->Phi(xki, phi, theta);
-        vk(i) = yk->at(i, 1) - dot(phi, s);
+        bs->Phi(xki, phi, theta);
+        vk(i) = (yk->at(i, 1) - od->y_mean) - dot(phi, s);
     }
 
     phi.clear();
@@ -97,7 +105,7 @@ void stograd::compute_vk(int k, mat &theta, vec &s)
 
 void stograd::compute_dvk(int k, mat &theta, vec &s)
 {
-    alpha_size = nBasis * od->nDim + s.n_rows;
+    int alpha_size = nBasis * od->nDim + s.n_rows;
     dvk        = vm (2 * od->bSize);
 
     SFOR(i, od->bSize)
@@ -106,16 +114,14 @@ void stograd::compute_dvk(int k, mat &theta, vec &s)
         dvk[i + od->bSize] = zeros<mat> (alpha_size, 1);
     }
 
-    mat dphi;
-    vec phi;
+    mat dphi; vec phi;
     mat* xk = od->getxb(k);
-    mat* yk = od->getyb(k);
 
     SFOR(i, od->bSize)
     {
         rowvec xki = xk->row(i);
-        basis->Phi(xki, phi, theta);
-        basis->dPhi_dtheta(xki, theta, phi, dphi);
+        bs->Phi(xki, phi, theta);
+        bs->dPhi_dtheta(xki, theta, phi, dphi);
         NFOR(j, t, nBasis, od->nDim)
             dvk[i + od->bSize](j * od->nDim + t, 0) = dphi(t, 2 * j) * s(2 * j) + dphi(t, 2 * j + 1) * s(2 * j + 1);
         SFOR(j, s.n_rows)
@@ -125,7 +131,7 @@ void stograd::compute_dvk(int k, mat &theta, vec &s)
     }
 
     NFOR(i, j, od->bSize, alpha_size)
-        dvk[i] += dvk[i + od->bSize](j, 0) * dalpha(j);
+        dvk[i] += dvk[i + od->bSize](j, 0) * dalpha[j];
 }
 
 void stograd::compute_rk()
@@ -137,7 +143,7 @@ void stograd::compute_rk()
 
     SFOR(i, od->bSize)
     {
-        SFOR(Mr, Mc, alpha_size, alpha_size)
+        NFOR(Mr, Mc, alpha_size, alpha_size)
             rk[Mc * alpha_size + Mr] += dvk[i](Mr, Mc) * vk(i, 0);
         SFOR(Mr, alpha_size)
             rk[SQR(alpha_size) + Mr] += dvk[i + od->bSize](Mr, 0) * vk(i, 0);

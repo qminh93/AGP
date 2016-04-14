@@ -71,6 +71,9 @@ void OrganizedData::process(RawData* raw, int nBlock, double pTest, int support_
     printf("Done ! nSupport = %d\n", support(0, 0)->n_rows);
     cout << "Packaging training/testing data points into their respective cluster" << endl;
 
+    y_mean = 0.0;
+    SFOR(pos, nData) y_mean += raw->X(pos, nDim); y_mean /= nData;
+
     SFOR(i, nBlock)
     {
         cout << "Processing block " << i + 1 << endl;

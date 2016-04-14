@@ -5,7 +5,7 @@ optimizer::optimizer(OrganizedData *od, configuration * config, int nBasis)
     this->od = od;
     this->nBasis = nBasis;
     this->config = config;
-    this->gradient = new stograd(this->od);
+    this->gradient = new stograd(this->od, nBasis);
 }
 
 optimizer::~optimizer()
@@ -24,7 +24,7 @@ pdd optimizer::learning_rate(int nIter)
 void optimizer::initialize()
 {
     int m = this->nBasis, d = this->od->nDim;
-    this->M = eye <mat> (m * (d + 2), m * (d + 2)); this->dM = this->M;
+    this->M = 20 * eye <mat> (m * (d + 2), m * (d + 2)); this->dM = 0.0 * this->M;
     this->b = zeros <vec> (m * (d + 2)); this->db = this->b;
     vectorise(M, b, this->eta);
     this->z_mean = zeros <vec> (m * (d + 2));
@@ -37,6 +37,10 @@ void optimizer::optimize()
     cout << "Initializing parameters ..." << endl;
     initialize();
     int Ms = this->nBasis * (this->od->nDim + 2);
+
+    cout << "Predicting ..." << endl;
+    cout << "RMSE = " << this->model->predict(this->M, this->b) << endl;
+
     cout << "Start updating ..." << endl;
     SFOR(t, this->config->training_num_ite)
     {
@@ -47,13 +51,16 @@ void optimizer::optimize()
         multi_gaussian_random(this->z_mean, this->z_cov, this->config->anytime_z_sample, Z);
         SFOR(i, this->config->anytime_k_sample) K(i) = IRAND(0, this->od->nBlock - 1);
         cout << "Computing stochastic gradient ..." << endl;
-        this->gradient->compute(Z.t(), K, this->eta, Ms, Ms, stgrad);
+        mat Zt = Z.t();
+        this->gradient->compute(Zt, K, this->eta, Ms, Ms, stgrad);
+        cout << "Extracting results ..." << endl;
+        stgrad = stgrad / norm(stgrad);
         unvectorise(this->dM, this->db, stgrad, Ms, Ms);
         cout << "Computing adaptive learning rates ..." << endl;
         pdd rates = learning_rate(t);
         cout << "Updating ..." << endl;
-        this->M += rates.first * this->dM;
-        this->b += rates.second * this->db;
+        this->M += (rates.first - this->config->M_lambda) * this->dM;
+        this->b += (rates.second - this->config->b_lambda) * this->db;
         vectorise(this->M, this->b, this->eta);
 
         if (((t + 1) % this->config->anytime_interval) == 0)

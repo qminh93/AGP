@@ -88,7 +88,8 @@ void multi_gaussian_random(vec &mean, mat &cov, int N, mat &res) // generate N s
     res = mat(N, mean.n_elem);
     for (int i = 0; i < N; i++)
     {
-        vec sample = multi_gaussian_random(mean, cov);
+        vec sample(mean.n_elem);
+        multi_gaussian_random(mean, cov, sample);
         for (int j = 0; j < mean.n_elem; j++) res(i, j) = sample(j);
     }
 }
@@ -117,6 +118,15 @@ void unvectorise(mat &theta, vec &s, vec &res, int t_r, int t_c)
 {
     int s_r   = res.n_rows - t_r * t_c;
     int index = 0;
+
+    //cout << res.n_rows << endl;
+
+    //cout << t_r << " " << t_c << endl;
+
+    theta = mat(t_r, t_c);
+    s = vec(s_r);
+
+    //cout << t_r << " " << t_c << endl;
 
     NFOR(i, j, t_c, t_r) theta(j, i) = res(index++);
     SFOR(i, s_r) s(i) = res(index++);

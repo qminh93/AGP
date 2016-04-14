@@ -4,6 +4,7 @@
 #include "libhead.h"
 #include "organized.h"
 #include "basis.h"
+#include "configuration.h"
 
 class predictor
 {
@@ -15,7 +16,10 @@ class predictor
         int nz;
         vec zmean;
         mat zcov, Z;
-        basis bs;
+        basis *bs;
+
+        OrganizedData* od;
+        configuration* config;
 
         double predict(mat &M, vec &b);
 };

@@ -49,8 +49,8 @@ class configuration
         /* VARIATIONAL SETTINGS */
         double	alpha, beta, gamma;		// M and b initialisation parameters
 
-        Configuration();
-       ~Configuration();
+        configuration();
+       ~configuration();
 
         void load_config(char* config_file);
 

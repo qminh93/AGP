@@ -44,7 +44,6 @@ using namespace arma;
 #define LN(m, mean, var) (-0.5 * log(2 * PI * (var)) - 0.5 * (pow((m) - (mean), 2.0)) / (var) ) // the log pdf function for N(mean, var = sigma^2)
 #define SFOR(i,n) for (int i = 0; i < (int)n; i++)
 #define NFOR(i,j,n,m) SFOR(i,n) SFOR(j,m)
-#define ECHO(z) printf(z)
 #define CHUNK(a,b) (a > b ? a / b : 1)
 #define SQR(a) ((a) * (a))
 #define NUM2STR(x) ( static_cast < ostringstream* > (&(ostringstream() << x))->str() )
@@ -99,5 +98,7 @@ void multi_gaussian_random(vec &mean, mat &cov, vec &x); // sample a multivariat
 void grand(double mean, double sigma, int N, vec &x); // generate n samples from N(mean, sigma^2)
 double grand();
 
+void vectorise(mat &theta, vec &s, vec &res);
+void unvectorise(mat &theta, vec &s, vec &res, int t_r, int t_c);
 
 #endif /* LIBHEAD_H_ */

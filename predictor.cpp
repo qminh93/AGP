@@ -23,18 +23,17 @@ double predictor::predict(mat &M, vec &b)
     vec alpha;
     double rmse = 0.0;
     vm diff(od->nBlock);
-    SFOR(i, od->nBlock) diff[i] = vec(tSize);
+    SFOR(i, od->nBlock) diff[i] = vec(this->od->tSize);
     SFOR(i, nz)
     {
         alpha = M * Z.row(i).t() + b;
-        mat theta;
-        vec s;
+        mat theta; vec s;
         unvectorise(theta, s, alpha, od->nDim, config->nBasis);
         NFOR(j, k, od->nBlock, od->tSize)
         {
-            vec xt_jk = od->getxt(j)->row(k);
-            double yt_jk = od->getyt(j)->at(k, 0);
-            vec phi;
+            rowvec xt_jk = od->getxt(j)->row(k);
+            double yt_jk = od->getyt(j)->at(k, 0) - od->y_mean;
+            colvec phi;
             bs->Phi(xt_jk, phi, theta);
             diff[j](k) += (1.0 / nz) * (yt_jk - dot(phi, s));
         }

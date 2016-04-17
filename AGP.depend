@@ -51,7 +51,7 @@
 
 1460183392 e:\codes\agp\loader.h
 
-1460879353 source:e:\codes\agp\main.cpp
+1460901251 source:e:\codes\agp\main.cpp
 	"libhead.h"
 	"configuration.h"
 	"optimizer.h"
@@ -81,7 +81,7 @@
 	"basis.h"
 	"configuration.h"
 
-1460898688 source:e:\codes\agp\optimizer.cpp
+1460901371 source:e:\codes\agp\optimizer.cpp
 	"optimizer.h"
 
 1460629739 source:e:\codes\agp\organized.cpp

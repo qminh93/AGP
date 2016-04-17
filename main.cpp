@@ -14,12 +14,12 @@ void test()
     cout << "Loading raw data ..." << endl;
     RawData* raw = new RawData(config->nPoint);
     raw->load(config->data_file.c_str());
-    raw->normalize_x();
+    //raw->normalize_x();
     cout << "Done." << endl; // TESTED: loading raw data module is bug-free
     // organize data
     cout << "Organizing data ..." << endl;
     OrganizedData* od = new OrganizedData();
-    od->noise = 0.25; od->signal = 1.0;
+    od->noise = 0.25; od->signal = 7.0;
     od->process(raw, config->nBlock, config->pTest, config->support_per_block, config->max_support);
     cout << "Done." << endl; // TESTED: organizing data module is bug-free
     // commence learning ...

@@ -69,8 +69,8 @@ void stograd::compute_dlogqp(mat &theta, vec &s, int k) // compute (d/deta)(log(
 {
     mat dlogqp_dM = - inv(M).t(); // note that (d/dM)(logqp) = -(M^{-1})' - sum_k (dalpha_k/dM * (d/dalpha_k)(log p(alpha)))
     vec dlogqp_db(M.n_rows);
-    // note that (d/db) (logqp) = (d/dalpha) log(p(alpha)) = -blkdiag[I_md, (m / noise^2) * I_2m] * alpha
-    // which simplifies as (d/db) (logqp) = [-vec(theta); - (m / noise^2) * s since alpha = vec(theta, s)]
+    // note that (d/db) (logqp) = (d/dalpha) log(p(alpha)) = -blkdiag[I_md, (m / signal^2) * I_2m] * alpha
+    // which simplifies as (d/db) (logqp) = [-vec(theta); - (m / signal^2) * s since alpha = vec(theta, s)]
     int cc = 0; // cc will iterate through all component indices of alpha
 
     NFOR(tc, tr, theta.n_cols, theta.n_rows) // for each theta_tc and each component tr of the column vector theta_tc
@@ -81,11 +81,11 @@ void stograd::compute_dlogqp(mat &theta, vec &s, int k) // compute (d/deta)(log(
 
     SFOR(i, s.n_rows) // for each component of the column vector s
     {
-        dlogqp_db[cc] = -((double)nBasis / SQR(od->noise)) * s(i); // this follows from the simplified expression for (d/db)
-        // potential bug: shouldn't it be nBasis / noise^2 instead of nBasis / bSize (fixed)
+        dlogqp_db[cc] = -((double)nBasis / SQR(od->signal)) * s(i); // this follows from the simplified expression for (d/db)
+        // potential bug: shouldn't it be nBasis / signal^2 instead of nBasis / bSize (fixed)
         // potential bug: wrong sign (fixed)
-        dlogqp_dM += ((double)nBasis / SQR(od->noise)) * s(i) * dalpha[cc++];
-        // potential bug: shouldn't it be nBasis / noise^2 instead of nBasis / bSize (fixed)
+        dlogqp_dM += ((double)nBasis / SQR(od->signal)) * s(i) * dalpha[cc++];
+        // potential bug: shouldn't it be nBasis / signal^2 instead of nBasis / bSize (fixed)
         // potential bug: wrong sign (fixed)
     }
 

@@ -1,22 +1,22 @@
 /* DATA SETTINGS */
-// comments
+// comments: dataset, result file, no. of data points, no. of block, Markov order, support_per_block, max support, test percentage
 ./aimpeak.csv ./aimpeak_result.txt
-41800 50 0
+41800 100 0
 418 200 0.05
 /* LEARNING SETTINGS */
-// comments
-10
-1.0 1.0 1.0 0.75
-0.01 1.0 1.0 0.5
+// comments: no. of iterations, [original rate, tau, lambda, decay] repeats twice on two rows
+50
+1.0 1.0 9.0 0.75
+1.0 1.0 9.0 0.75
 /* PREDICTION SETTINGS */
-// comments
-2 1 1
+// comments: checking period, no. of k, no. of z
+5 1 20
 /* BASIS SETTINGS */
-// comments
-20
+// comments: the number of basis functions
+10
 /* HYPER SETTINGS */
-// comments
+// comments: no use for these now
 0.0 0.0 0.0
 /* VARIATIONAL SETTINGS */
-// comments
+// comments: no use for these now
 0.0 0.0 0.0

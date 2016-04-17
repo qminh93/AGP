@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1460627950 source:e:\codes\agp\basis.cpp
+1460882789 source:e:\codes\agp\basis.cpp
 	"basis.h"
 
-1460625299 e:\codes\agp\basis.h
+1460882409 e:\codes\agp\basis.h
 	"libhead.h"
 
 1460627451 e:\codes\agp\libhead.h
@@ -43,7 +43,7 @@
 1460184869 e:\codes\agp\raw.h
 	"libhead.h"
 
-1460626712 source:e:\codes\agp\libhead.cpp
+1460898710 source:e:\codes\agp\libhead.cpp
 	"libhead.h"
 
 1460183212 source:e:\codes\agp\loader.cpp
@@ -51,7 +51,7 @@
 
 1460183392 e:\codes\agp\loader.h
 
-1460630973 source:e:\codes\agp\main.cpp
+1460879353 source:e:\codes\agp\main.cpp
 	"libhead.h"
 	"configuration.h"
 	"optimizer.h"
@@ -81,7 +81,7 @@
 	"basis.h"
 	"configuration.h"
 
-1460631454 source:e:\codes\agp\optimizer.cpp
+1460898688 source:e:\codes\agp\optimizer.cpp
 	"optimizer.h"
 
 1460629739 source:e:\codes\agp\organized.cpp
@@ -93,6 +93,6 @@
 1460184749 source:e:\codes\agp\raw.cpp
 	"raw.h"
 
-1460629623 source:e:\codes\agp\stograd.cpp
+1460897941 source:e:\codes\agp\stograd.cpp
 	"stograd.h"
 

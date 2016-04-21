@@ -39,3 +39,42 @@ void basis::dPhi_dtheta(rowvec &x, mat &theta, mat &dphi) // compute dphi(x) = [
     vec phi; Phi(x, phi, theta); // computing phi = Phi(x)
     dPhi_dtheta(x, theta, phi, dphi); // then, invoke the above computing procedure with phi = Phi(x) precomputed
 }
+
+double basis::kernel(rowvec &a, rowvec &b, mat &theta, double signal)
+{
+    colvec phi_a, phi_b;
+    Phi(a, phi_a, theta);
+    Phi(b, phi_b, theta);
+    return (SQR(signal) / theta.n_cols) * dot(phi_a,phi_b);
+}
+
+double basis::kernel(rowvec &a, mat &theta, double signal)
+{
+    return kernel(a, a, theta, signal);
+}
+
+void basis::kernel(mat &A, mat &B, mat &theta, double signal, mat &KAB)
+{
+    KAB = mat(A.n_rows, B.n_rows);
+
+    SFOR(i, A.n_rows)
+    {
+        colvec phi_Ai;
+        rowvec Ai = A.row(i);
+        Phi(Ai, phi_Ai, theta);
+        SFOR(j, B.n_rows)
+        {
+            rowvec Bj = B.row(j);
+            colvec phi_Bj;
+            Phi(Bj, phi_Bj, theta);
+            KAB(i, j) = dot(phi_Ai,phi_Bj);
+        }
+    }
+
+    KAB = (SQR(signal) / theta.n_cols) * KAB;
+}
+
+void basis::kernel(mat &A, mat &theta, double signal, mat &KAA)
+{
+    kernel(A, A, theta, signal, KAA);
+}

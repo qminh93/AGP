@@ -24,7 +24,8 @@ pdd optimizer::learning_rate(int nIter) // compute the adaptive learning rate wh
 void optimizer::initialize() // initialize M = <constant> * I & b = 0
 {
     int m = this->nBasis, d = this->od->nDim;
-    this->M = eye <mat> (m * (d + 2), m * (d + 2)); this->dM = 0.0 * this->M;
+    mat temp = randu <mat> (m * (d + 2), m * (d + 2));
+    this->M = 5.5 * temp * temp.t() + 1.5 * eye <mat> (m * (d + 2), m * (d + 2)); this->dM = 0.0 * this->M;
     this->b = zeros <vec> (m * (d + 2)); this->db = this->b;
     vectorise(M, b, this->eta); // eta = vec(M, b)
     this->z_mean = zeros <vec> (m * (d + 2)); // psi(z) = N(0, I) -- later, we parameterise alpha | y = Mz + b which implies q(alpha) = (1/|M|) * psi(z)
@@ -39,7 +40,7 @@ void optimizer::optimize()
     int Ms = this->nBasis * (this->od->nDim + 2); // evaluate |z| which is also |alpha|
 
     cout << "Evaluating performance before learning ..." << endl;
-    cout << "RMSE = " << this->model->predict(this->M, this->b) << endl;
+    cout << "RMSE = " << this->model->PIC_predict(this->M, this->b) << endl;
 
     cout << "Start updating ..." << endl;
     SFOR(t, this->config->training_num_ite)
@@ -63,14 +64,14 @@ void optimizer::optimize()
         pdd rates = learning_rate(t); // compute the adaptive learning rate
 
         cout << "Updating ..." << endl;
-        this->M += (rates.first - this->config->M_lambda) * this->dM; // update with regularisation
-        this->b += (rates.second - this->config->b_lambda) * this->db; // update with regularisation
+        this->M += rates.first * (this->dM - this->config->M_lambda * this->M); // update with regularisation
+        this->b += rates.second * (this->db - this->config->b_lambda * this->b); // update with regularisation
         vectorise(this->M, this->b, this->eta); // combine M & b into eta again
 
         if (((t + 1) % this->config->anytime_interval) == 0) // printing out the RMSE periodically ...
         {
             cout << "Predicting ..." << endl;
-            cout << "RMSE = " << this->model->predict(this->M, this->b) << endl;
+            cout << "RMSE = " << this->model->PIC_predict(this->M, this->b) << endl;
         }
     }
     cout << "Done." << endl;

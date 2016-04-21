@@ -18,6 +18,10 @@ class basis
         void dPhi_dtheta(rowvec &x, mat &theta, mat &dphi);
         // compute dphi(x) = [dcos(2 * pi * x * theta_1)/dtheta_1 dsin(2 * pi * x * theta_1)/dtheta_1 ... dcos(2 * pi * x * theta_m)/dtheta_m dsin(2 * pi * x * theta_m)/dtheta_m]
         // given x, theta = [theta_1 theta_2 ... theta_m]
+        double kernel(rowvec &a, rowvec &b, mat &theta, double signal);
+        double kernel(rowvec &a, mat &theta, double signal);
+        void   kernel(mat &A, mat &B, mat &theta, double signal, mat &KAB);
+        void   kernel(mat &A, mat &theta, double signal, mat &KAA);
 };
 
 #endif // BASIS_H

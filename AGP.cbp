@@ -22,6 +22,25 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="basis.cpp" />
+		<Unit filename="basis.h" />
+		<Unit filename="configuration.cpp" />
+		<Unit filename="configuration.h" />
+		<Unit filename="kmean.cpp" />
+		<Unit filename="kmean.h" />
+		<Unit filename="libhead.cpp" />
+		<Unit filename="libhead.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="optimizer.cpp" />
+		<Unit filename="optimizer.h" />
+		<Unit filename="organized.cpp" />
+		<Unit filename="organized.h" />
+		<Unit filename="predictor.cpp" />
+		<Unit filename="predictor.h" />
+		<Unit filename="raw.cpp" />
+		<Unit filename="raw.h" />
+		<Unit filename="stograd.cpp" />
+		<Unit filename="stograd.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

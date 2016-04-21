@@ -22,6 +22,7 @@ class predictor
         configuration* config;
 
         double predict(mat &M, vec &b);
+        double PIC_predict(mat &M, vec &b);
 };
 
 #endif // PREDICTOR_H

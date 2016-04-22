@@ -24,7 +24,7 @@ class stograd
         void compute_vk(int k, mat &theta, vec &s);
         void compute_dvk(int k, mat &theta, vec &s);
         void compute_F(mat &theta, vec &s, int k, vec &Fkz);
-        void compute_dlogqp(mat &theta, vec &s, int k);
+        void compute_dlogqp(mat &theta, vec &s);
 };
 
 #endif // STOGRAD_H

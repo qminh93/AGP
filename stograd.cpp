@@ -53,12 +53,13 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res) // c
         // extract theta and s from alpha
         mat theta; vec s; // theta is a d x m matrix and s is a (2 * m x 1) column vector
         unvectorise(theta, s, alpha, od->nDim, nBasis); // alpha is a m * (d + 2) x 1 column vector
+        compute_dlogqp(theta, s); // compute (d/deta)(log(q(alpha_z)/p(alpha_z)))
 
         SFOR(j, nk) // for each sampled block index
         {
             vec Fkz; // Fkz is supposed to be a ((size(alpha)^2 + size(alpha)) x 1) column vector
             compute_F(theta, s, K(j), Fkz); // compute Fkz(eta, alpha_z)
-            compute_dlogqp(theta, s, K(j)); // compute (d/deta)(log(q(alpha_z)/p(alpha_z)))
+            //compute_dlogqp(theta, s, K(j)); // compute (d/deta)(log(q(alpha_z)/p(alpha_z)))
             res += (od->nBlock * Fkz - dlogqp); // updating dL/deta
             Fkz.clear();
         }
@@ -69,7 +70,7 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res) // c
     res = (1.0 / (nz * nk)) * res; // return dL/deta
 }
 
-void stograd::compute_dlogqp(mat &theta, vec &s, int k) // compute (d/deta)(log(q(alpha)/p(alpha))) given alpha
+void stograd::compute_dlogqp(mat &theta, vec &s) // compute (d/deta)(log(q(alpha)/p(alpha))) given alpha
 // this is achieved by computing (d/dM)(log(q(alpha)/p(alpha))) and (d/db)(log(q(alpha)/p(alpha)))
 // (d/deta) can then be constructed as vec((d/dM), (d/db))
 {

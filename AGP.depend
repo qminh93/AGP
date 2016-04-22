@@ -70,7 +70,7 @@
 	"raw.h"
 	"kmean.h"
 
-1461310310 e:\codes\agp\stograd.h
+1461318212 e:\codes\agp\stograd.h
 	"libhead.h"
 	"basis.h"
 	"organized.h"
@@ -93,6 +93,6 @@
 1460184749 source:e:\codes\agp\raw.cpp
 	"raw.h"
 
-1460902027 source:e:\codes\agp\stograd.cpp
+1461318259 source:e:\codes\agp\stograd.cpp
 	"stograd.h"
 

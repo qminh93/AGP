@@ -14,7 +14,7 @@ stograd::~stograd() // clear memory
     b.clear();
 }
 
-void stograd::compute_dalpha_dM(vec &z) // compute {dalpha_k/dM}_k -- remember that alpha = Mz + b where M & b are parameters
+void stograd::compute_dalpha_dM(vec &z, vm &dalpha) // compute {dalpha_k/dM}_k -- remember that alpha = Mz + b where M & b are parameters
 // hence, dalpha_k/dM = [dalpha_k/dM_{ij}]_{ij} = {I(i = k)zj}_{ij} -- this is because alpha_k = \sum_j M_{kj}zj
 {
     SFOR(k, z.n_rows) // for each k
@@ -33,44 +33,50 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res) // c
     unvectorise(M, b, eta, M_r, M_c); // extract M and b from eta
     M_inv = - inv(M).t();
 
-    res = vec(eta.n_rows);
+    res = zeros <vec> (eta.n_rows);
     int nz = Z.n_cols, nk = K.n_rows;
 
-    //int nThread = omp_get_num_procs(), chunk = nz / nThread;
-	//if (chunk == 0) chunk++;
+    int nThread = omp_get_num_procs(), chunk = nz / nThread;
+	if (chunk == 0) chunk++;
 
-	//#pragma omp parallel for schedule(dynamic, chunk)
+	vm res_t(nThread); SFOR(i, nThread) res_t[i] = vec(eta.n_rows);
+
+	#pragma omp parallel for schedule(dynamic, chunk)
     SFOR(i, nz) // for each z-sample
     {
+        int t = omp_get_thread_num();
         // construc alpha_z
         vec z = Z.col(i);
         vec alpha = M * z + b;
 
         // construct dalpha/dM
-        dalpha = vm(alpha.n_rows);
-        compute_dalpha_dM(z);
+        vm dalpha(alpha.n_rows);
+        compute_dalpha_dM(z, dalpha);
 
         // extract theta and s from alpha
         mat theta; vec s; // theta is a d x m matrix and s is a (2 * m x 1) column vector
         unvectorise(theta, s, alpha, od->nDim, nBasis); // alpha is a m * (d + 2) x 1 column vector
-        compute_dlogqp(theta, s); // compute (d/deta)(log(q(alpha_z)/p(alpha_z)))
+
+        vec dlogqp;
+        compute_dlogqp(theta, s, dalpha, dlogqp); // compute (d/deta)(log(q(alpha_z)/p(alpha_z)))
 
         SFOR(j, nk) // for each sampled block index
         {
             vec Fkz; // Fkz is supposed to be a ((size(alpha)^2 + size(alpha)) x 1) column vector
-            compute_F(theta, s, K(j), Fkz); // compute Fkz(eta, alpha_z)
+            compute_F(theta, s, K(j), dalpha, Fkz); // compute Fkz(eta, alpha_z)
             //compute_dlogqp(theta, s, K(j)); // compute (d/deta)(log(q(alpha_z)/p(alpha_z)))
-            res += (od->nBlock * Fkz - dlogqp); // updating dL/deta
+            res_t[t] += (od->nBlock * Fkz - dlogqp); // updating dL/deta
             Fkz.clear();
         }
 
         dalpha.clear(); theta.clear(); s.clear(); z.clear(); alpha.clear(); // clear memory
     }
 
+    SFOR(t, nThread) res += res_t[t];
     res = (1.0 / (nz * nk)) * res; // return dL/deta
 }
 
-void stograd::compute_dlogqp(mat &theta, vec &s) // compute (d/deta)(log(q(alpha)/p(alpha))) given alpha
+void stograd::compute_dlogqp(mat &theta, vec &s, vm &dalpha, vec &dlogqp) // compute (d/deta)(log(q(alpha)/p(alpha))) given alpha
 // this is achieved by computing (d/dM)(log(q(alpha)/p(alpha))) and (d/db)(log(q(alpha)/p(alpha)))
 // (d/deta) can then be constructed as vec((d/dM), (d/db))
 {
@@ -99,16 +105,19 @@ void stograd::compute_dlogqp(mat &theta, vec &s) // compute (d/deta)(log(q(alpha
     vectorise(dlogqp_dM, dlogqp_db, dlogqp); // (d/deta) = vec((d/dM), (d/db))
 }
 
-void stograd::compute_F(mat &theta, vec &s, int k, vec &Fkz) // compute Fkz = -0.5 * rk where
+void stograd::compute_F(mat &theta, vec &s, int k, vm &dalpha, vec &Fkz) // compute Fkz = -0.5 * rk where
 // rk = [rk(u)]' with rk(u) = (1 / noise^2) * (d/du) (vk' * vk) = (2 / noise^2) * (dvk/du)' * vk & u iterates through the component of eta
 {
-    compute_vk(k, theta, s); // compute vk
-    compute_dvk(k, theta, s); // compute dvk
-    compute_rk(); // compute rk = [rk(u)]' with u iterates through the component of eta & rk(u) = (2 / noise^2) * (dvk/du)' * vk
+    vec vk, rk;
+    vm dvk;
+
+    compute_vk(k, theta, s, vk); // compute vk
+    compute_dvk(k, theta, s, dalpha, dvk); // compute dvk
+    compute_rk(vk, dvk, rk); // compute rk = [rk(u)]' with u iterates through the component of eta & rk(u) = (2 / noise^2) * (dvk/du)' * vk
     Fkz = -0.5 * rk; // Fkz = -0.5 * rk
 }
 
-void stograd::compute_vk(int k, mat &theta, vec &s) // given theta and s, compute vk = yk - Phi(Xk)' * s for data block k^th
+void stograd::compute_vk(int k, mat &theta, vec &s, vec &vk) // given theta and s, compute vk = yk - Phi(Xk)' * s for data block k^th
 {
     colvec phi;
 
@@ -127,7 +136,7 @@ void stograd::compute_vk(int k, mat &theta, vec &s) // given theta and s, comput
     phi.clear(); // clear memory
 }
 
-void stograd::compute_dvk(int k, mat &theta, vec &s) // compute dvk/deta = [dvk/du]' with u iterates through the components of eta
+void stograd::compute_dvk(int k, mat &theta, vec &s, vm &dalpha, vm &dvk) // compute dvk/deta = [dvk/du]' with u iterates through the components of eta
 // this is achieved by computing dvki/du for every pair of (i, u) s.t i \in block k & u \in alpha first
 // then, using chain rule of derivative to construct dvki/du for u in eta
 {
@@ -164,7 +173,7 @@ void stograd::compute_dvk(int k, mat &theta, vec &s) // compute dvk/deta = [dvk/
         dvk[i] += dvk[i + od->bSize](j, 0) * dalpha[j]; // dvki/dM = sum_j (dvki/dalpha_j) * (dalpha_j/dM) by chain rule of derivatives
 }
 
-void stograd::compute_rk() // compute rk = [rk(u)]' where u iterates through variables in eta = vec(M, b)
+void stograd::compute_rk(vec &vk, vm &dvk, vec &rk) // compute rk = [rk(u)]' where u iterates through variables in eta = vec(M, b)
 {
     int eta_size   = SQR(dvk[0].n_rows) + dvk[0].n_rows,
         alpha_size = dvk[0].n_rows; // recall that |eta| = |alpha|^2 + |alpha|

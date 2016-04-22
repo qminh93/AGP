@@ -6,11 +6,11 @@
 /* LEARNING SETTINGS */
 // comments: no. of iterations, [original rate, tau, lambda, decay] repeats twice on two rows
 50
-1.5 1.4 1.0 0.6
-1.5 1.4 1.0 0.6
+1.9 1.4 2.0 0.6
+1.9 1.4 2.0 0.6
 /* PREDICTION SETTINGS */
 // comments: checking period, no. of k, no. of z
-5 20 5
+5 20 1
 /* BASIS SETTINGS */
 // comments: the number of basis functions
 20

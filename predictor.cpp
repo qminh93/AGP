@@ -22,10 +22,25 @@ double predictor::PIC_predict(mat &M, vec &b)
 {
     vec alpha;
     double rmse = 0.0;
-    vm diff(od->nBlock);
-    SFOR(i, od->nBlock) diff[i] = vec(this->od->tSize);
+
+    int nThread = omp_get_num_procs();
+
+    vector <vm> diff(nThread);
+    SFOR(i, nThread)
+    {
+        diff[i] = vm(od->nBlock);
+        SFOR(j, od->nBlock) diff[i][j] = zeros <mat> (od->tSize, 1);
+    }
+
+    cout << nz << endl;
+
+    int chunk = nz / nThread;
+	if (chunk == 0) chunk++;
+
+	#pragma omp parallel for schedule(dynamic, chunk)
     SFOR(i, nz)
     {
+        int t = omp_get_thread_num();
         alpha = M * Z.row(i).t() + b;
         mat theta; vec s;
         unvectorise(theta, s, alpha, od->nDim, config->nBasis);
@@ -40,18 +55,25 @@ double predictor::PIC_predict(mat &M, vec &b)
             bs->kernel(XBj, theta, od->signal, KBjBj);
             bs->kernel(XTj, XBj, theta, od->signal, KTjBj);
 
+            KBjBj.diag() += SQR(od->noise);
+            mat pred = KTjBj * inv_sympd(KBjBj) * YBj;
+
             SFOR(k, od->tSize)
-            {
-                rowvec xt_jk = od->getxt(j)->row(k);
+                diff[t][j][k] += (1.0 / nz) * (YTj(k, 0) - pred(k, 0));
 
-                mat pred = KTjBj.row(k) * inv(KBjBj + SQR(od->noise) * eye<mat>(od->bSize, od->bSize)) * YBj;
-
-                diff[j][k] = (1.0 / nz) * (YTj(k, 0) - pred(0, 0));
-            }
+            KBjBj.clear(); KTjBj.clear(); pred.clear();
+            XBj.clear(); YBj.clear();
+            XTj.clear(); YTj.clear();
         }
     }
 
-    NFOR(i, j, od->nBlock, od->tSize) rmse += SQR(diff[i](j));
+    NFOR(i, j, od->nBlock, od->tSize)
+    {
+        double sum = 0.0;
+        SFOR(t, nThread) sum += diff[t][i][j];
+        rmse += SQR(sum);
+    }
+
     return sqrt((1.0 / od->nTest) * rmse);
 }
 

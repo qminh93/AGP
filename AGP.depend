@@ -33,7 +33,7 @@
 1460624681 e:\codes\agp\configuration.h
 	"libhead.h"
 
-1460184171 source:e:\codes\agp\kmean.cpp
+1461244923 source:e:\codes\agp\kmean.cpp
 	"kmean.h"
 
 1453649145 e:\codes\agp\kmean.h
@@ -57,7 +57,7 @@
 	"optimizer.h"
 	"raw.h"
 
-1461168045 e:\codes\agp\optimizer.h
+1461244873 e:\codes\agp\optimizer.h
 	"libhead.h"
 	"organized.h"
 	"stograd.h"
@@ -81,13 +81,13 @@
 	"basis.h"
 	"configuration.h"
 
-1461166903 source:e:\codes\agp\optimizer.cpp
+1461306989 source:e:\codes\agp\optimizer.cpp
 	"optimizer.h"
 
 1460629739 source:e:\codes\agp\organized.cpp
 	"organized.h"
 
-1461167753 source:e:\codes\agp\predictor.cpp
+1461306917 source:e:\codes\agp\predictor.cpp
 	"predictor.h"
 
 1460184749 source:e:\codes\agp\raw.cpp

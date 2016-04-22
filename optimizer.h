@@ -8,7 +8,7 @@
 #include "configuration.h"
 #include "predictor.h"
 
-#define DEFAULT_NO_SAMPLE 10
+#define DEFAULT_NO_SAMPLE 20
 
 class optimizer
 {

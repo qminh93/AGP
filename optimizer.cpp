@@ -25,8 +25,8 @@ void optimizer::initialize() // initialize M = <constant> * I & b = 0
 {
     int m = this->nBasis, d = this->od->nDim;
     mat temp = randu <mat> (m * (d + 2), m * (d + 2));
-    this->M = 5.5 * temp * temp.t() + 1.5 * eye <mat> (m * (d + 2), m * (d + 2)); this->dM = 0.0 * this->M;
-    this->b = zeros <vec> (m * (d + 2)); this->db = this->b;
+    this->M = temp * temp.t() + eye <mat> (m * (d + 2), m * (d + 2)); this->dM = 0.0 * this->M;
+    this->b = randu <vec> (m * (d + 2)); this->db = this->b;
     vectorise(M, b, this->eta); // eta = vec(M, b)
     this->z_mean = zeros <vec> (m * (d + 2)); // psi(z) = N(0, I) -- later, we parameterise alpha | y = Mz + b which implies q(alpha) = (1/|M|) * psi(z)
     this->z_cov = eye <mat> (m * (d + 2), m * (d + 2));
@@ -40,8 +40,11 @@ void optimizer::optimize()
     int Ms = this->nBasis * (this->od->nDim + 2); // evaluate |z| which is also |alpha|
 
     cout << "Evaluating performance before learning ..." << endl;
-    cout << "RMSE = " << this->model->PIC_predict(this->M, this->b) << endl;
+    vector < pair <int, double> > recorder;
+    pair <int, double> p; p.first = 0; p.second = this->model->PIC_predict(this->M, this->b);
+    recorder.push_back(p);
 
+    cout << "RMSE = " << p.second << endl;
     cout << "Start updating ..." << endl;
     SFOR(t, this->config->training_num_ite)
     {
@@ -70,9 +73,12 @@ void optimizer::optimize()
 
         if (((t + 1) % this->config->anytime_interval) == 0) // printing out the RMSE periodically ...
         {
+            p.first = t + 1; p.second = this->model->PIC_predict(this->M, this->b);
             cout << "Predicting ..." << endl;
-            cout << "RMSE = " << this->model->PIC_predict(this->M, this->b) << endl;
+            cout << "RMSE = " << p.second << endl;
+            recorder.push_back(p);
         }
     }
-    cout << "Done." << endl;
+    cout << "Done. To summarize: " << endl;
+    SFOR(t, recorder.size()) cout << recorder[t].first << " " << recorder[t].second << endl;
 }

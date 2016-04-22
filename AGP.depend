@@ -70,7 +70,7 @@
 	"raw.h"
 	"kmean.h"
 
-1460628753 e:\codes\agp\stograd.h
+1461310310 e:\codes\agp\stograd.h
 	"libhead.h"
 	"basis.h"
 	"organized.h"
@@ -87,7 +87,7 @@
 1460629739 source:e:\codes\agp\organized.cpp
 	"organized.h"
 
-1461306917 source:e:\codes\agp\predictor.cpp
+1461309796 source:e:\codes\agp\predictor.cpp
 	"predictor.h"
 
 1460184749 source:e:\codes\agp\raw.cpp

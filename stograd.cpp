@@ -31,10 +31,15 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res) // c
 // nk is the number of block indices drawn independently from U(1, p) or U(0, p - 1) -- the latter is the C++ 0-based indexing
 {
     unvectorise(M, b, eta, M_r, M_c); // extract M and b from eta
+    M_inv = - inv(M).t();
 
     res = vec(eta.n_rows);
     int nz = Z.n_cols, nk = K.n_rows;
 
+    //int nThread = omp_get_num_procs(), chunk = nz / nThread;
+	//if (chunk == 0) chunk++;
+
+	//#pragma omp parallel for schedule(dynamic, chunk)
     SFOR(i, nz) // for each z-sample
     {
         // construc alpha_z
@@ -55,9 +60,10 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res) // c
             compute_F(theta, s, K(j), Fkz); // compute Fkz(eta, alpha_z)
             compute_dlogqp(theta, s, K(j)); // compute (d/deta)(log(q(alpha_z)/p(alpha_z)))
             res += (od->nBlock * Fkz - dlogqp); // updating dL/deta
+            Fkz.clear();
         }
 
-        dalpha.clear(); theta.clear(); s.clear(); // clear memory
+        dalpha.clear(); theta.clear(); s.clear(); z.clear(); alpha.clear(); // clear memory
     }
 
     res = (1.0 / (nz * nk)) * res; // return dL/deta
@@ -67,7 +73,7 @@ void stograd::compute_dlogqp(mat &theta, vec &s, int k) // compute (d/deta)(log(
 // this is achieved by computing (d/dM)(log(q(alpha)/p(alpha))) and (d/db)(log(q(alpha)/p(alpha)))
 // (d/deta) can then be constructed as vec((d/dM), (d/db))
 {
-    mat dlogqp_dM = - inv(M).t(); // note that (d/dM)(logqp) = -(M^{-1})' - sum_k (dalpha_k/dM * (d/dalpha_k)(log p(alpha)))
+    mat dlogqp_dM = M_inv; // note that (d/dM)(logqp) = -(M^{-1})' - sum_k (dalpha_k/dM * (d/dalpha_k)(log p(alpha)))
     vec dlogqp_db(M.n_rows);
     // note that (d/db) (logqp) = (d/dalpha) log(p(alpha)) = -blkdiag[I_md, (m / signal^2) * I_2m] * alpha
     // which simplifies as (d/db) (logqp) = [-vec(theta); - (m / signal^2) * s since alpha = vec(theta, s)]

@@ -13,7 +13,7 @@ class stograd
 
         OrganizedData *od;
         vm dalpha, dvk;
-        mat M;
+        mat M, M_inv;
         vec b, vk, rk, dlogqp;
         int nBasis;
         basis* bs;

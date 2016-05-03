@@ -19,8 +19,8 @@ void test()
     // organize data
     cout << "Organizing data ..." << endl;
     OrganizedData* od = new OrganizedData();
-    od->noise = 0.25; od->signal = 7.0;
-    od->process(raw, config->nBlock, config->pTest, config->support_per_block, config->max_support);
+    od->noise = 0.25; od->signal = 4.0;
+    od->standard_process(raw, config->nBlock, config->pTest);
     cout << "Done." << endl; // TESTED: organizing data module is bug-free
     // commence learning ...
     cout << "Commence anytime learning ..." << endl;

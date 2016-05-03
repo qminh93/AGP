@@ -26,8 +26,8 @@ using namespace std;
 using namespace arma;
 
 //#define SEED_DEFAULT 4111987
-#define SEED_DEFAULT 20051987
-//#define SEED_DEFAULT 26031993
+//#define SEED_DEFAULT 20051987
+#define SEED_DEFAULT 26031993
 //#define SEED_DEFAULT 8071950
 //#define SEED_DEFAULT 10081950
 

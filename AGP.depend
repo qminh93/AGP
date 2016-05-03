@@ -5,7 +5,7 @@
 1461165595 e:\codes\agp\basis.h
 	"libhead.h"
 
-1460627451 e:\codes\agp\libhead.h
+1461916350 e:\codes\agp\libhead.h
 	<cstdio>
 	<cstdlib>
 	<iostream>
@@ -33,7 +33,7 @@
 1460624681 e:\codes\agp\configuration.h
 	"libhead.h"
 
-1461244923 source:e:\codes\agp\kmean.cpp
+1462043295 source:e:\codes\agp\kmean.cpp
 	"kmean.h"
 
 1453649145 e:\codes\agp\kmean.h
@@ -51,13 +51,13 @@
 
 1460183392 e:\codes\agp\loader.h
 
-1460902076 source:e:\codes\agp\main.cpp
+1462163731 source:e:\codes\agp\main.cpp
 	"libhead.h"
 	"configuration.h"
 	"optimizer.h"
 	"raw.h"
 
-1461244873 e:\codes\agp\optimizer.h
+1461944180 e:\codes\agp\optimizer.h
 	"libhead.h"
 	"organized.h"
 	"stograd.h"
@@ -65,7 +65,7 @@
 	"configuration.h"
 	"predictor.h"
 
-1460629383 e:\codes\agp\organized.h
+1462113257 e:\codes\agp\organized.h
 	"libhead.h"
 	"raw.h"
 	"kmean.h"
@@ -75,24 +75,24 @@
 	"basis.h"
 	"organized.h"
 
-1461166851 e:\codes\agp\predictor.h
+1462183554 e:\codes\agp\predictor.h
 	"libhead.h"
 	"organized.h"
 	"basis.h"
 	"configuration.h"
 
-1461306989 source:e:\codes\agp\optimizer.cpp
+1462183594 source:e:\codes\agp\optimizer.cpp
 	"optimizer.h"
 
-1460629739 source:e:\codes\agp\organized.cpp
+1462113402 source:e:\codes\agp\organized.cpp
 	"organized.h"
 
-1461309796 source:e:\codes\agp\predictor.cpp
+1462184340 source:e:\codes\agp\predictor.cpp
 	"predictor.h"
 
 1460184749 source:e:\codes\agp\raw.cpp
 	"raw.h"
 
-1461340905 source:e:\codes\agp\stograd.cpp
+1461852154 source:e:\codes\agp\stograd.cpp
 	"stograd.h"
 

@@ -110,10 +110,23 @@ void stograd::compute_F(mat &theta, vec &s, int k, vm &dalpha, vec &Fkz) // comp
 {
     vec vk, rk;
     vm dvk;
+    time_t t1, t2;
 
+    //cout << "Compute vk ..." << endl;
+    //t1 = time(NULL);
     compute_vk(k, theta, s, vk); // compute vk
+    //t2 = time(NULL);
+    //cout << "Incurred time = " << t2 - t1 << " secs." << endl;
+    //cout << "Compute dvk ..." << endl;
+    //t1 = time(NULL);
     compute_dvk(k, theta, s, dalpha, dvk); // compute dvk
+    //t2 = time(NULL);
+    //cout << "Incurred time = " << t2 - t1 << " secs." << endl;
+    //cout << "Compute rk ..." << endl;
+    //t1 = time(NULL);
     compute_rk(vk, dvk, rk); // compute rk = [rk(u)]' with u iterates through the component of eta & rk(u) = (2 / noise^2) * (dvk/du)' * vk
+    //t2 = time(NULL);
+    //cout << "Incurred time = " << t2 - t1 << " secs." << endl;
     Fkz = -0.5 * rk; // Fkz = -0.5 * rk
 }
 
@@ -136,7 +149,8 @@ void stograd::compute_vk(int k, mat &theta, vec &s, vec &vk) // given theta and 
     phi.clear(); // clear memory
 }
 
-void stograd::compute_dvk(int k, mat &theta, vec &s, vm &dalpha, vm &dvk) // compute dvk/deta = [dvk/du]' with u iterates through the components of eta
+void stograd::compute_dvk(int k, mat &theta, vec &s, vm &dalpha, vm &dvk)
+// compute dvk/deta = [dvk/du]' with u iterates through the components of eta
 // this is achieved by computing dvki/du for every pair of (i, u) s.t i \in block k & u \in alpha first
 // then, using chain rule of derivative to construct dvki/du for u in eta
 {

@@ -21,6 +21,10 @@ class predictor
         OrganizedData* od;
         configuration* config;
 
+        double fast_predict(mat &M, vec &b);
+        double fast_predict(mat &M, vec &b, rowvec &xt, double yt, bmat &cov_matrices);
+        double pro_predict(mat &M, vec &b, rowvec &xt, double yt);
+        double pro_predict(mat &M, vec &b);
         double predict(mat &M, vec &b);
         double PIC_predict(mat &M, vec &b);
 };

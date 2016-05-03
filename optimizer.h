@@ -8,7 +8,7 @@
 #include "configuration.h"
 #include "predictor.h"
 
-#define DEFAULT_NO_SAMPLE 20
+#define DEFAULT_NO_SAMPLE 5
 
 class optimizer
 {
@@ -25,6 +25,9 @@ class optimizer
 
         vec eta, b, z_mean, db;
         mat M, z_cov, dM;
+        field <mat> savedItems;
+
+        time_t t1, t2;
 
         void initialize();
         pair <double, double> learning_rate(int nIter);

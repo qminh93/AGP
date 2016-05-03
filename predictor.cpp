@@ -18,6 +18,148 @@ predictor::~predictor()
     //dtor
 }
 
+double predictor::fast_predict(mat &M, vec &b)
+{
+    bmat cov_matrices(nz, od->nBlock);
+
+    int nThread = omp_get_num_procs(), chunk = nz / nThread;
+	if (chunk == 0) chunk++;
+
+	#pragma omp parallel for schedule(dynamic, chunk)
+    SFOR(i, nz)
+    {
+        vec alpha = M * Z.row(i).t() + b;
+        mat theta; vec s;
+        unvectorise(theta, s, alpha, od->nDim, config->nBasis);
+
+        SFOR(j, od->nBlock)
+        {
+            //cout << i << " " << j << endl;
+            mat XBj = (*od->getxb(j)), KBjBj;
+            bs->kernel(XBj, theta, od->signal, KBjBj); KBjBj.diag() += SQR(od->noise);
+            KBjBj = inv_sympd(KBjBj);
+            cov_matrices(i, j) = new mat(od->bSize, od->bSize);
+            NFOR(u, v, od->bSize, od->bSize)
+                cov_matrices(i, j)->at(u, v) = KBjBj(u, v);
+            XBj.clear(); KBjBj.clear();
+        }
+
+        alpha.clear(); theta.clear(); s.clear();
+    }
+
+    double rmse = 0.0;
+    int pos = 0;
+
+    SFOR(i, od->nBlock)
+    {
+        mat XTi = (*od->getxt(i)), YTi = (*od->getyt(i)) - od->y_mean;
+        SFOR(j, od->tSize)
+        {
+            rowvec xt = XTi.row(j);
+            cout << "Predicting testing no. " << ++pos << " ..." << endl;
+            rmse += fast_predict(M, b, xt, YTi.at(j, 0), cov_matrices); xt.clear();
+        }
+        XTi.clear(); YTi.clear();
+    }
+
+    return sqrt(rmse / (od->nBlock * od->tSize));
+}
+
+double predictor::fast_predict(mat &M, vec &b, rowvec &xt, double yt, bmat &cov_matrices)
+{
+    double max_var = 0.0, rmse = INFTY;
+    vec variance(od->nBlock), pred(od->nBlock); variance.fill(0.0); pred.fill(0.0);
+
+    SFOR(i, od->nBlock)
+    {
+        mat XBi = (*od->getxb(i)), YBi = (*od->getyb(i)) - od->y_mean, KtBi, W;
+
+        SFOR(j, nz)
+        {
+            //cout << i << " " << j << endl;
+            vec alpha = M * Z.row(j).t() + b;
+            mat theta; vec s;
+            unvectorise(theta, s, alpha, od->nDim, config->nBasis);
+            bs->kernel(xt, XBi, theta, od->signal, KtBi);
+
+            W = *cov_matrices(j, i); W = KtBi * W;
+            pred(i) += (1.0 / nz) * trace(W * YBi);
+            variance(i) += (1.0 / nz) * fabs(trace(W * KtBi.t()));
+        }
+    }
+
+    SFOR(i, od->nBlock)
+    if (max_var < variance(i))
+    {
+        max_var = variance(i);
+        rmse = SQR(yt - pred(i));
+    }
+
+    return rmse;
+}
+
+double predictor::pro_predict(mat &M, vec &b, rowvec &xt, double yt)
+{
+    double min_var = INFTY, rmse = INFTY;
+    vec variance(od->nBlock), pred(od->nBlock); variance.fill(0.0); pred.fill(0.0);
+
+    SFOR(i, nz)
+    {
+        vec alpha = M * Z.row(i).t() + b;
+        mat theta; vec s;
+        unvectorise(theta, s, alpha, od->nDim, config->nBasis);
+
+        SFOR(j, od->nBlock)
+        {
+            mat XBj = (*od->getxb(j)), YBj = (*od->getyb(j)) - od->y_mean;
+            mat KBjBj, KtBj;
+
+            bs->kernel(XBj, theta, od->signal, KBjBj);
+            bs->kernel(xt, XBj, theta, od->signal, KtBj);
+
+            KBjBj.diag() += SQR(od->noise);
+            mat L = KtBj * inv_sympd(KBjBj);
+            pred(j) += (1.0 / nz) * trace(L * YBj);
+            variance(j) += (1.0 / nz) * fabs(bs->kernel(xt, theta, od->signal) - trace(L * KtBj.t()));
+
+            XBj.clear(); YBj.clear(); KBjBj.clear(); KtBj.clear();
+        }
+
+        theta.clear(); s.clear();
+    }
+
+    SFOR(i, od->nBlock)
+    if (variance(i) < min_var)
+    {
+        min_var = variance(i);
+        rmse = SQR(pred(i) - yt);
+    }
+
+    return rmse;
+}
+
+double predictor::pro_predict(mat &M, vec &b)
+{
+    double rmse = 0.0;
+    int pos = 0;
+
+    SFOR(i, od->nBlock)
+    {
+        mat XTi = (*od->getxt(i)), YTi = (*od->getyt(i)) - od->y_mean;
+        SFOR(j, od->tSize)
+        {
+            rowvec xt = XTi.row(j);
+            cout << "Predicting testing no. " << ++pos << " ..." << endl;
+            rmse += pro_predict(M, b, xt, YTi.at(j, 0)); xt.clear();
+        }
+        XTi.clear(); YTi.clear();
+    }
+
+    rmse /= (od->nBlock * od->tSize);
+
+    return sqrt(rmse);
+}
+
 double predictor::PIC_predict(mat &M, vec &b)
 {
     double rmse = 0.0;

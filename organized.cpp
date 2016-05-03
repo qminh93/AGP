@@ -2,30 +2,117 @@
 
 OrganizedData::OrganizedData()
 {
-    nTrain  = nTest  = nSupport = 0;
+    nTrain  = nTest  = 0;
     nDim    = nBlock = bSize    = 0;
 }
 
 OrganizedData::~OrganizedData()
 {
-    train.clear(); test.clear(); support.clear();
+    train.clear(); test.clear();
 }
 
-void OrganizedData::process(RawData* raw, int nBlock, double pTest, int support_per_block, int max_number_support)
+void OrganizedData::standard_process(RawData *raw, int nBlock, double pTest)
 {
     int nData = raw->nData, nDim  = raw->nDim - 1;
 
-    this->nSupport  = support_per_block * nBlock;
+    this->nBlock    = nBlock;
+    this->nDim      = nDim;
+
+    train           = bmat (nBlock, 2);
+    test            = bmat (nBlock, 2);
+
+    vec mark(nData); mark.fill(0);
+
+    this->bSize = nData / nBlock;
+    this->tSize = (int) floor(bSize * pTest);
+    this->nTest = this->tSize * nBlock;
+    this->bSize = this->bSize - this->tSize;
+    this->nTrain = nData - this->nTest;
+
+    cout << "Extracting " << this->nTest << " testing points ..." << endl;
+
+    vi sample;
+    randsample(nData, nTest, sample);
+    mat Xtest(nTest, raw->nDim);
+    mat Xtrain(nTrain, raw->nDim);
+
+    NFOR(i, j, nTest, raw->nDim) Xtest(i, j) = raw->X(sample[i], j);
+    SFOR(i, nTest) mark(sample[i]) = 1; sample.clear();
+
+    cout << "Extracting " << this->nTrain << " training points ..." << endl;
+
+    int pos = 0;
+    SFOR(i, nData)
+    if (mark[i] == 0)
+    {
+        SFOR(j, raw->nDim) Xtrain(pos, j) = raw->X(i, j);
+        pos = pos + 1;
+    }
+    mark.clear();
+
+    cout << "Partitioning raw data into " << nBlock << " cluster using K-Mean ..." << endl;
+
+    RawData *trainraw = new RawData(this->nTrain, Xtrain);
+    KMean  *partitioner = new KMean(trainraw);
+    Partition *clusters = partitioner->cluster(nBlock);
+
+    y_mean = 0.0;
+    SFOR(i, nTrain) y_mean += trainraw->X(i, nDim); y_mean /= nTrain;
+
+    cout << "Packaging testing data points into their respective clusters ..." << endl;
+
+    vec selected(this->nTest); selected.fill(0);
+    SFOR(i, this->nBlock)
+    {
+        mat *xt = new mat(this->tSize, nDim),
+            *yt = new mat(this->tSize, 1);
+        test(i, 0) = xt; test(i, 1) = yt;
+    }
+
+    NFOR(i, j, this->nBlock, this->tSize)
+    {
+        double bestdist = INFTY, dist = INFTY;
+        int tpos = -1;
+
+        SFOR(t, this->nTest)
+        if (selected(t) < 1)
+        {
+            dist = 0.0;
+            SFOR(v, nDim) dist += SQR(Xtest(t, v) - clusters->C[i][v]);
+            if (dist < bestdist) tpos = t;
+            bestdist = min(bestdist, dist);
+        }
+
+        SFOR(v, nDim) test(i, 0)->at(j, v) = Xtest(tpos, v);
+        test(i, 1)->at(j, 0) = Xtest(tpos, nDim); selected(tpos) = 0;
+    }
+
+    cout << "Packaging training data points into their respective clusters ..." << endl;
+    SFOR(i, this->nBlock)
+    {
+        cout << "Processing block " << i + 1 << " ..." << endl;
+        mat *xb  = new mat(bSize, nDim),
+            *yb  = new mat(bSize, 1);
+        NFOR(j, t, this->bSize, nDim)
+        {
+            xb->at(j, t) = trainraw->X(clusters->member[i][j], t);
+            yb->at(j, 0) = trainraw->X(clusters->member[i][j], nDim);
+        }
+        train(i, 0) = xb; train(i, 1) = yb;
+        printf("Done ! nTrain[%d] = %d, nTest[%d] = %d .\n", i, (int) train(i, 0)->n_rows, i, (int) test(i, 0)->n_rows);
+    }
+}
+
+void OrganizedData::process(RawData* raw, int nBlock, double pTest)
+{
+    int nData = raw->nData, nDim  = raw->nDim - 1;
+
     this->nBlock    = nBlock;
     this->nDim      = nDim;
 
     ytrain_t		= bmat (nBlock, 1);
     train           = bmat (nBlock, 2);
     test            = bmat (nBlock, 2);
-    support         = bmat (1, 2);
-
-    mat *xm         = new mat(nSupport, nDim),
-        *ym         = new mat(nSupport, 1);
 
     vec mark(nData); mark.fill(0);
 
@@ -34,41 +121,6 @@ void OrganizedData::process(RawData* raw, int nBlock, double pTest, int support_
     KMean  *partitioner = new KMean(raw);
     Partition *clusters = partitioner->cluster(nBlock);
 
-    cout << "Generating supports from partitioned data" << endl;
-
-    NFOR(i, j, nBlock, support_per_block)
-    {
-        double mix = 1.0;
-        rowvec rv  = raw->X.row(clusters->member[i][j]);
-        SFOR(t, nDim) xm->at(i * support_per_block + j, t) = rv(t) * mix + clusters->C[i][t] * (1 - mix);
-        ym->at(i * support_per_block + j, 0) = rv(nDim) * mix + clusters->C[i][nDim] * (1 - mix);
-    }
-
-    if (max_number_support < this->nSupport) // shrinking the support set
-    {
-    	vector <int> indices(this->nSupport, 0);
-    	SFOR(t, this->nSupport) indices[t] = t;
-
-    	mat *xm_shrink = new mat(max_number_support, nDim);
-    	mat *ym_shrink = new mat(max_number_support, 1);
-
-    	int last = this->nSupport - 1, pos;
-    	SFOR(t, max_number_support)
-    	{
-    		pos = IRAND(0, last);
-    		SFOR(u, nDim) xm_shrink->at(t, u) = xm->at(indices[pos], u);
-    		ym_shrink->at(t, 0) = ym->at(indices[pos], 0);
-    		indices[pos] = indices[last]; last--;
-    	}
-
-    	delete xm; delete ym;
-    	xm = xm_shrink; ym = ym_shrink; this->nSupport = max_number_support;
-    }
-
-    support(0, 0) = xm;
-    support(0, 1) = ym;
-
-    printf("Done ! nSupport = %d\n", support(0, 0)->n_rows);
     cout << "Packaging training/testing data points into their respective cluster" << endl;
 
     y_mean = 0.0;
@@ -158,14 +210,4 @@ mat* OrganizedData::getxt(int &i)
 mat* OrganizedData::getyt(int &i)
 {
     return test(i, 1);
-}
-
-mat* OrganizedData::getxm()
-{
-    return support(0, 0);
-}
-
-mat* OrganizedData::getym()
-{
-    return support(0, 1);
 }

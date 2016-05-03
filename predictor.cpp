@@ -209,7 +209,7 @@ double predictor::PIC_predict(mat &M, vec &b)
 
     NFOR(i, j, od->nBlock, od->tSize)
     {
-        double sum = 0.0;
+        double sum = 0.0; // hmm ...
         SFOR(t, nThread) sum += diff[t][i][j];
         rmse += SQR(sum);
     }

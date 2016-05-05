@@ -11,6 +11,102 @@ OrganizedData::~OrganizedData()
     train.clear(); test.clear();
 }
 
+void OrganizedData::save_preset_partition(const char *partition_file)
+{
+    ofstream par(partition_file);
+
+    par << bSize << "," << tSize << "," << y_mean << endl;
+
+    NFOR(i, j, nBlock, bSize)
+    {
+        SFOR(t, nDim) par << train(i, 0)->at(j, t) << ",";
+        par << train(i, 1)->at(j, 0) << endl;
+    }
+    NFOR(i, j, nBlock, tSize)
+    {
+        SFOR(t, nDim) par << test(i, 0)->at(j, t) << ",";
+        par << test(i, 1)->at(j, 0) << endl;
+    }
+
+    par.close();
+}
+
+void OrganizedData::load_preset_partition(int nDim, int nBlock, const char *partition_file)
+{
+    this->nDim      = nDim;
+    this->nBlock    = nBlock;
+    train           = bmat (nBlock, 2);
+    test            = bmat (nBlock, 2);
+
+    ifstream par(partition_file);
+    string line, token;
+
+    getline(par, line);
+    ss parse(line);
+    getline(parse, token, ',');
+    this->bSize = atoi(token.c_str());
+    this->nTrain = bSize * nBlock;
+    getline(parse, token, ',');
+    this->tSize = atoi(token.c_str());
+    this->nTest = tSize * nBlock;
+    getline(parse, token, ',');
+    this->y_mean = atof(token.c_str());
+
+    cout << this->y_mean << endl;
+    //cout << bSize << " " << tSize << endl;
+
+    SFOR(i, nBlock)
+    {
+        mat *XTrain = new mat(bSize, nDim);
+        mat *YTrain = new mat(bSize, 1);
+
+        SFOR(j, bSize)
+        {
+            getline(par, line);
+            //cout << line << endl;
+            ss parser(line);
+            //cout << parser.str() << endl;
+            vd temp;
+            while (getline(parser, token, ',')) {
+                //cout << token << endl;
+                temp.push_back(atof(token.c_str()));
+            }
+
+            //cout << nDim << " " << temp.size() << endl;
+
+            SFOR(t, nDim) XTrain->at(j, t) = temp[t];
+            YTrain->at(j, 0) = temp[nDim];
+
+            temp.clear();
+        }
+        train(i, 0)  = XTrain;
+        train(i, 1)  = YTrain;
+    }
+
+    SFOR(i, nBlock)
+    {
+        mat *XTest = new mat(tSize, nDim);
+        mat *YTest = new mat(tSize, 1);
+
+        SFOR(j, tSize)
+        {
+            getline(par, line);
+            ss parser(line);
+            vd temp;
+            while (getline(parser, token, ','))
+                temp.push_back(atof(token.c_str()));
+
+            SFOR(t, nDim) XTest->at(j, t) = temp[t];
+            YTest->at(j, 0) = temp[nDim];
+            temp.clear();
+        }
+        test(i, 0)  = XTest;
+        test(i, 1)  = YTest;
+    }
+
+    par.close();
+}
+
 void OrganizedData::standard_process(RawData *raw, int nBlock, double pTest)
 {
     int nData = raw->nData, nDim  = raw->nDim - 1;

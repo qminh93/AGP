@@ -60,7 +60,7 @@ void RawData::load(const char* datafile)
 
     while (getline(fin, line))
     {
-        stringstream parser(line);
+        ss parser(line);
         vd temp;
 
         while (getline(parser, token, ','))

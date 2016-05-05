@@ -8,12 +8,14 @@
 #define SUPPORT 2
 #define HYPER 3
 
+#define SD "/* EXPERIMENT SEED */"
 #define DS "/* DATA SETTINGS */"
 #define BS "/* BASIS SETTINGS */"
 #define HS "/* HYPER SETTINGS */"
 #define VS "/* VARIATIONAL SETTINGS */"
 #define LS "/* LEARNING SETTINGS */"
 #define PS "/* PREDICTION SETTINGS */"
+#define PP "/* PRELOAD PARTITION */"
 #define CM "//"
 
 class configuration
@@ -21,10 +23,14 @@ class configuration
     public:
 
         /* FILE DIRECTORIES */
-        string  data_file, result_file;
+        string data_file, result_file;
+
+        /* PRELOAD PARTITION */
+        string par_file;
+        bool preload;
 
         /* DATA SETTINGS */
-        int		nBlock, nBand, // the number of partitions and Markov order
+        int		nBlock, nDim, nBand, // the number of partitions, input dimensions and Markov order
                 support_per_block, // the number of supporting points to be generated per block
                 nPoint, // the maximum number of data points to be loaded in memory
                 max_support; // number of support cap
@@ -48,6 +54,10 @@ class configuration
 
         /* VARIATIONAL SETTINGS */
         double	alpha, beta, gamma;		// M and b initialisation parameters
+
+        /* SEED */
+        int nSeed;
+        vi seed;
 
         configuration();
        ~configuration();

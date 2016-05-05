@@ -9,6 +9,11 @@
 #include "predictor.h"
 
 #define DEFAULT_NO_SAMPLE 5
+#define RMSE 2
+#define DIAG 3
+#define TIME 1
+#define PTIM 4
+#define INDX 0
 
 class optimizer
 {
@@ -26,6 +31,7 @@ class optimizer
         vec eta, b, z_mean, db;
         mat M, z_cov, dM;
         field <mat> savedItems;
+        vvd res;
 
         time_t t1, t2;
 

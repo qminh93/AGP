@@ -17,6 +17,9 @@ class OrganizedData
         OrganizedData();
        ~OrganizedData();
 
+        void save_preset_partition(const char *partition_file);
+        void load_preset_partition(int nDim, int nBlock, const char *partition_file);
+
         void    process(RawData* raw, int nBlock, double pTest);
         void    standard_process(RawData *raw, int nBlock, double pTest);
 

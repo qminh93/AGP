@@ -21,6 +21,7 @@
 #include <bitset>
 #include <functional>
 #include <numeric>
+#include <sstream>
 
 using namespace std;
 using namespace arma;
@@ -61,6 +62,7 @@ using namespace arma;
 #define vvm  vector < vm >
 #define ves  vector < ExpSetting* >
 #define bmat field  < mat* >
+#define ss   stringstream
 
 struct Partition
 {

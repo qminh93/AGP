@@ -15,6 +15,9 @@ void configuration::load_config(char* config_file)
      ifstream cfg(config_file);
      string header, comment;
 
+     preload = false;
+     string str;
+
      while (getline(cfg, header,'\n'))
      {
          cout << header << endl;
@@ -27,13 +30,19 @@ void configuration::load_config(char* config_file)
          }
          stringstream input(comment);
          // Loading contents
-         if (header == DS)
+         if (header == PP)
+         {
+            input >> this->par_file >> str;
+            this->preload = atoi(str.c_str());
+            cout << this->par_file << " " << this->preload << endl;
+         }
+         else if (header == DS)
          {
             input >> this->data_file >> this->result_file;
             cout << this->data_file << " " << this->result_file << endl;
-            cfg >> this->nPoint >> this->nBlock >> this->nBand;
+            cfg >> this->nPoint >> this->nBlock >> this->nDim >> this->nBand;
             cfg >> this->support_per_block >> this->max_support >> this->pTest;
-            cout << this->nPoint << " " << this->nBlock << " " << this->nBand << endl;
+            cout << this->nPoint << " " << this->nBlock << " " << this->nDim << " " << this->nBand << endl;
             cout << this->support_per_block << " " << this->max_support << " " << this->pTest << endl;
             getline(cfg, comment,'\n');
          }
@@ -65,6 +74,13 @@ void configuration::load_config(char* config_file)
          {
              input >> this->anytime_interval >> this->anytime_k_sample >> this->anytime_z_sample;
              cout << this->anytime_interval << " " << this->anytime_k_sample << " " << this->anytime_z_sample << endl;
+         }
+         else if (header == SD)
+         {
+             input >> this->nSeed;
+             cout << this->nSeed << endl;
+             this->seed = vi(this->nSeed);
+             SFOR(i, nSeed) input >> this->seed[i];
          }
          else
          {

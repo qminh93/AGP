@@ -176,13 +176,15 @@ double predictor::PIC_predict(mat &M, vec &b)
     int chunk = nz / nThread;
 	if (chunk == 0) chunk++;
 
-	#pragma omp parallel for schedule(dynamic, chunk)
+	//#pragma omp parallel for schedule(static, chunk)
     SFOR(i, nz)
     {
-        int t = omp_get_thread_num();
+        int t = 0; //omp_get_thread_num();
         vec alpha = M * Z.row(i).t() + b;
         mat theta; vec s;
         unvectorise(theta, s, alpha, od->nDim, config->nBasis);
+
+        //basis *localbs = new basis();
 
         SFOR(j, od->nBlock)
         {
@@ -191,19 +193,85 @@ double predictor::PIC_predict(mat &M, vec &b)
             mat XTj = (*od->getxt(j));
             mat YBj = (*od->getyb(j)) - od->y_mean;
             mat YTj = (*od->getyt(j)) - od->y_mean;
+
             bs->kernel(XBj, theta, od->signal, KBjBj);
             bs->kernel(XTj, XBj, theta, od->signal, KTjBj);
 
             KBjBj.diag() += SQR(od->noise);
+
             mat pred = KTjBj * inv_sympd(KBjBj) * YBj;
             diff[t][j] += (1.0 / nz) * (YTj - pred);
-            /*SFOR(k, od->tSize)
-                diff[t][j][k] += (1.0 / nz) * (YTj(k, 0) - pred(k, 0));*/
 
             KBjBj.clear(); KTjBj.clear(); pred.clear();
-            XBj.clear(); YBj.clear();
-            XTj.clear(); YTj.clear();
+            XBj.clear(); YBj.clear(); XTj.clear(); YTj.clear();
         }
+
+        theta.clear(); alpha.clear(); s.clear();
+    }
+
+    NFOR(i, j, od->nBlock, od->tSize)
+    {
+        double sum = 0.0; // hmm ...
+        SFOR(t, nThread) sum += diff[t][i][j];
+        rmse += SQR(sum);
+    }
+
+    return sqrt((1.0 / od->nTest) * rmse);
+}
+
+double predictor::combined_predict(mat &M, vec &b)
+{
+    double rmse = 0.0;
+    int nThread = omp_get_num_procs();
+
+    vector <vm> diff(nThread);
+    SFOR(i, nThread)
+    {
+        diff[i] = vm(od->nBlock);
+        SFOR(j, od->nBlock) diff[i][j] = zeros <mat> (od->tSize, 1);
+    }
+
+    int chunk = nz / nThread;
+	if (chunk == 0) chunk++;
+
+	//#pragma omp parallel for schedule(static, chunk)
+    SFOR(i, nz)
+    {
+        int t = 0; //omp_get_thread_num();
+        vec alpha = M * Z.row(i).t() + b;
+        mat theta; vec s;
+        unvectorise(theta, s, alpha, od->nDim, config->nBasis);
+
+        SFOR(j, od->nBlock)
+        {
+            mat PhiTjs(od->tSize, 1);
+            mat KBjBj, KTjBj;
+            mat XBj = (*od->getxb(j));
+            mat XTj = (*od->getxt(j));
+            mat YBj = (*od->getyb(j)) - od->y_mean;
+            mat YTj = (*od->getyt(j)) - od->y_mean;
+
+            SFOR(k, od->tSize)
+            {
+                rowvec XTjk = XTj.row(k);
+                colvec phi;
+                bs->Phi(XTjk, phi, theta);
+                PhiTjs(k, 0) = dot(phi, s);
+                XTjk.clear(); phi.clear();
+            }
+
+            bs->kernel(XBj, theta, od->signal, KBjBj);
+            bs->kernel(XTj, XBj, theta, od->signal, KTjBj);
+
+            KBjBj.diag() += SQR(od->noise);
+
+            mat pred = KTjBj * inv_sympd(KBjBj) * YBj + PhiTjs;
+            diff[t][j] += (1.0 / nz) * (YTj - pred);
+
+            KBjBj.clear(); KTjBj.clear(); pred.clear();
+            XBj.clear(); YBj.clear(); XTj.clear(); YTj.clear();
+        }
+
         theta.clear(); alpha.clear(); s.clear();
     }
 

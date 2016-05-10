@@ -41,10 +41,10 @@ void stograd::compute(mat &Z, vec &K, vec &eta, int M_r, int M_c, vec &res) // c
 
 	vm res_t(nThread); SFOR(i, nThread) res_t[i] = vec(eta.n_rows);
 
-	#pragma omp parallel for schedule(dynamic, chunk)
+	//#pragma omp parallel for schedule(dynamic, chunk)
     SFOR(i, nz) // for each z-sample
     {
-        int t = omp_get_thread_num();
+        int t = 0; //omp_get_thread_num();
         // construc alpha_z
         vec z = Z.col(i);
         vec alpha = M * z + b;

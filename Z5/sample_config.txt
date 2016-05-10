@@ -1,0 +1,28 @@
+/* DATA SETTINGS */
+// comments: dataset, result file, no. of data points, no. of block, no. of input dimension, Markov order, support_per_block, max support, test percentage
+./aimpeak.csv ./aimpeak_result.txt
+41800 200 6 0
+10 400 0.05
+/* PRELOAD PARTITION */
+// comments: partition file, available or not
+./partition.csv 1
+/* LEARNING SETTINGS */
+// comments: no. of iterations, [original rate, tau, lambda, decay] repeats twice on two rows
+30
+1.6 2.0 2.0 0.6
+1.6 2.0 2.0 0.6
+/* PREDICTION SETTINGS */
+// comments: checking period, no. of k, no. of z
+5 1 1
+/* BASIS SETTINGS */
+// comments: the number of basis functions
+20
+/* HYPER SETTINGS */
+// comments: no use for these now
+0.0 0.0 0.0
+/* EXPERIMENT SEED */
+// comments: seeds
+5 26031993 4111987 20051987 10081950 8071950
+/* VARIATIONAL SETTINGS */
+// comments: no use for these now
+0.0 0.0 0.0

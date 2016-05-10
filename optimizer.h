@@ -23,6 +23,7 @@ class optimizer
        ~optimizer();
 
         int nBasis;
+        double M_tau, b_tau;
         OrganizedData* od;
         configuration* config;
         stograd* gradient;

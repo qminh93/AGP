@@ -52,13 +52,13 @@
 
 1460183392 e:\codes\agp\loader.h
 
-1462460282 source:e:\codes\agp\main.cpp
+1462518085 source:e:\codes\agp\main.cpp
 	"libhead.h"
 	"configuration.h"
 	"optimizer.h"
 	"raw.h"
 
-1462454214 e:\codes\agp\optimizer.h
+1462895063 e:\codes\agp\optimizer.h
 	"libhead.h"
 	"organized.h"
 	"stograd.h"
@@ -76,24 +76,24 @@
 	"basis.h"
 	"organized.h"
 
-1462183554 e:\codes\agp\predictor.h
+1462867678 e:\codes\agp\predictor.h
 	"libhead.h"
 	"organized.h"
 	"basis.h"
 	"configuration.h"
 
-1462464537 source:e:\codes\agp\optimizer.cpp
+1462867705 source:e:\codes\agp\optimizer.cpp
 	"optimizer.h"
 
-1462448396 source:e:\codes\agp\organized.cpp
+1462505793 source:e:\codes\agp\organized.cpp
 	"organized.h"
 
-1462288367 source:e:\codes\agp\predictor.cpp
+1462895088 source:e:\codes\agp\predictor.cpp
 	"predictor.h"
 
 1462440869 source:e:\codes\agp\raw.cpp
 	"raw.h"
 
-1461852154 source:e:\codes\agp\stograd.cpp
+1462507632 source:e:\codes\agp\stograd.cpp
 	"stograd.h"
 

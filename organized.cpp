@@ -52,7 +52,7 @@ void OrganizedData::load_preset_partition(int nDim, int nBlock, const char *part
     getline(parse, token, ',');
     this->y_mean = atof(token.c_str());
 
-    cout << this->y_mean << endl;
+    //cout << this->y_mean << endl;
     //cout << bSize << " " << tSize << endl;
 
     SFOR(i, nBlock)

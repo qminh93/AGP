@@ -219,16 +219,22 @@ double predictor::PIC_predict(mat &M, vec &b)
     return sqrt((1.0 / od->nTest) * rmse);
 }
 
-double predictor::combined_predict(mat &M, vec &b)
+pdd predictor::combined_predict(mat &M, vec &b)
 {
-    double rmse = 0.0;
+    double rmse = 0.0, mnlp = 0.0;
     int nThread = omp_get_num_procs();
 
     vector <vm> diff(nThread);
+    vector <vm> var(nThread);
     SFOR(i, nThread)
     {
         diff[i] = vm(od->nBlock);
-        SFOR(j, od->nBlock) diff[i][j] = zeros <mat> (od->tSize, 1);
+        var[i]  = vm(od->nBlock);
+        SFOR(j, od->nBlock)
+        {
+            diff[i][j] = zeros <mat> (od->tSize, 1);
+            var[i][j]  = zeros <mat> (od->tSize, 1);
+        }
     }
 
     int chunk = nz / nThread;
@@ -245,7 +251,7 @@ double predictor::combined_predict(mat &M, vec &b)
         SFOR(j, od->nBlock)
         {
             mat PhiTjs(od->tSize, 1);
-            mat KBjBj, KTjBj;
+            mat KBjBj, KTjBj, KTjTj(od->tSize, od->tSize);
             mat XBj = (*od->getxb(j));
             mat XTj = (*od->getxt(j));
             mat YBj = (*od->getyb(j)) - od->y_mean;
@@ -257,6 +263,8 @@ double predictor::combined_predict(mat &M, vec &b)
                 colvec phi;
                 bs->Phi(XTjk, phi, theta);
                 PhiTjs(k, 0) = dot(phi, s);
+                //KTjTj(k, k) = SQR(od->signal);
+                //cout << "CHECK = " << KTjTj(k, k) << endl;
                 XTjk.clear(); phi.clear();
             }
 
@@ -265,11 +273,27 @@ double predictor::combined_predict(mat &M, vec &b)
 
             KBjBj.diag() += SQR(od->noise);
 
-            mat pred = KTjBj * inv_sympd(KBjBj) * YBj + PhiTjs;
+            mat buffer = KTjBj * inv_sympd(KBjBj);
+
+            mat pred = (1.0 - od->gamma) * buffer * YBj + PhiTjs;
+
             diff[t][j] += (1.0 / nz) * (YTj - pred);
+
+            SFOR(k, od->tSize)
+            {
+                vec v1 = buffer.row(k).t();
+                vec v2 = KTjBj.row(k).t();
+                var[t][j](k, 0) += ((1 - SQR(od->gamma)) * (SQR(od->signal) - dot(v1, v2) + SQR(od->noise)));
+                //double pred_var = (1 - SQR(od->gamma)) * (KTjTj(k, k) - dot(v1, v2));
+                //var[t][j](k, 0) += SQR(diff[t][j](k, 0)) / pred_var + log(2 * PI * pred_var);
+                //cout << "pred var " << pred_var << endl;
+                //cout << j << " " << k << " " << var[t][j](k, 0) << endl;
+                v1.clear(); v2.clear();
+            }
 
             KBjBj.clear(); KTjBj.clear(); pred.clear();
             XBj.clear(); YBj.clear(); XTj.clear(); YTj.clear();
+            buffer.clear();
         }
 
         theta.clear(); alpha.clear(); s.clear();
@@ -277,12 +301,22 @@ double predictor::combined_predict(mat &M, vec &b)
 
     NFOR(i, j, od->nBlock, od->tSize)
     {
-        double sum = 0.0; // hmm ...
-        SFOR(t, nThread) sum += diff[t][i][j];
-        rmse += SQR(sum);
+        double sum = 0.0, dev = 0.0; // hmm ...
+        SFOR(t, nThread)
+        {
+            sum += diff[t][i](j, 0);
+            dev += var[t][i](j, 0);
+        }
+        dev = dev / nz;
+
+        //cout << "Var^2 = " << dev << endl;
+
+        rmse += SQR(sum); mnlp += ((SQR(sum) / dev) + log(2 * PI * dev));
     }
 
-    return sqrt((1.0 / od->nTest) * rmse);
+    pdd res(sqrt((1.0 / od->nTest) * rmse), (0.5 * mnlp) / od->nTest);
+
+    return res;
 }
 
 double predictor::predict(mat &M, vec &b)

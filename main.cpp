@@ -21,7 +21,7 @@ void test()
     // organize data
     cout << "Loading data ..." << endl;
     OrganizedData* od = new OrganizedData();
-    od->noise = 0.25; od->signal = 4.0;
+    od->noise = 2.0; od->signal = 7.0; od->gamma = 0.01;
     if (!config->preload)
     {
         cout << "Loading raw data ..." << endl;

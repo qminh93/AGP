@@ -181,7 +181,7 @@ Partition* KMean::cluster(int nBlock)
 double KMean::Dist(int i, int j)
 {
 	double dist = 0.0;
-	SFOR(t, data->nDim) // data->nDim: cluster (x, y); data->nDim - 1: cluster x
+	SFOR(t, data->nDim - 1) // data->nDim: cluster (x, y); data->nDim - 1: cluster x
 		dist += pow(C[i][t] - data->X(j, t), 2.0);
 	return sqrt(dist);
 }

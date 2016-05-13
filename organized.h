@@ -12,7 +12,7 @@ class OrganizedData
         int nTrain, nTest, nDim, nBlock, bSize, tSize;
         bmat train, test, ytrain_t;
 
-        double noise, signal, y_mean;
+        double noise, signal, y_mean, gamma;
 
         OrganizedData();
        ~OrganizedData();

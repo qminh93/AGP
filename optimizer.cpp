@@ -58,15 +58,18 @@ void optimizer::optimize()
     cout << "Evaluating performance before learning ..." << endl;
     t1 = time(NULL);
 
-    pair <int, double> p; p.first = 0; p.second = this->model->combined_predict(this->M, this->b);
+    pdd pred_res = this->model->combined_predict(this->M, this->b);
+
+    pair <int, double> p; p.first = 0; p.second = pred_res.first;
+
     res[RMSE].push_back(p.second);
     res[INDX].push_back(0);
-    res[DIAG].push_back(trace(M * M.t()));
+    res[DIAG].push_back(pred_res.second);
 
     t2 = time(NULL);
     ptime += (t2 - t1);
 
-    cout << "RMSE = " << p.second << endl;
+    cout << "RMSE = " << p.second << " MNLP = " << pred_res.second << endl;
     cout << "Start updating ..." << endl;
 
     SFOR(t, this->config->training_num_ite)
@@ -110,14 +113,15 @@ void optimizer::optimize()
             cout << "Predicting ..." << endl;
             t1 = time(NULL);
             p.first = t + 1;
-            p.second = this->model->combined_predict(this->M, this->b);
+            pred_res = this->model->combined_predict(this->M, this->b);
+            p.second = pred_res.first;
             t2 = time(NULL);
-            cout << "RMSE = " << p.second << endl;
+            cout << "RMSE = " << p.second << " MNLP = " << pred_res.second << endl;
             ptime += (t2 - t1); npredict++;
 
             res[RMSE].push_back(p.second);
             res[INDX].push_back(t + 1);
-            res[DIAG].push_back(trace(M * M.t()));
+            res[DIAG].push_back(pred_res.second);
             res[TIME].push_back(total);
         }
     }

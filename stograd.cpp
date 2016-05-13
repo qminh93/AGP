@@ -94,10 +94,10 @@ void stograd::compute_dlogqp(mat &theta, vec &s, vm &dalpha, vec &dlogqp) // com
 
     SFOR(i, s.n_rows) // for each component of the column vector s
     {
-        dlogqp_db[cc] = -((double)nBasis / SQR(od->signal)) * s(i); // this follows from the simplified expression for (d/db)
+        dlogqp_db[cc] = -((double)nBasis / SQR(od->gamma * od->signal)) * s(i); // this follows from the simplified expression for (d/db)
         // potential bug: shouldn't it be nBasis / signal^2 instead of nBasis / bSize (fixed)
         // potential bug: wrong sign (fixed)
-        dlogqp_dM += ((double)nBasis / SQR(od->signal)) * s(i) * dalpha[cc++];
+        dlogqp_dM += ((double)nBasis / SQR(od->gamma * od->signal)) * s(i) * dalpha[cc++];
         // potential bug: shouldn't it be nBasis / signal^2 instead of nBasis / bSize (fixed)
         // potential bug: wrong sign (fixed)
     }
@@ -142,7 +142,7 @@ void stograd::compute_vk(int k, mat &theta, vec &s, vec &vk) // given theta and 
     {
         rowvec xki = xk->row(i);
         bs->Phi(xki, phi, theta); // compute the feature vector phi = Phi(xki) given theta
-        vk(i) = (yk->at(i, 0) - od->y_mean) - dot(phi, s); // vki = yki - Phi(xki)' * s -- we consider y to be normalized
+        vk(i) = (yk->at(i, 0) - od->y_mean) - (1.0 / od->gamma) * dot(phi, s); // vki = yki - Phi(xki)' * s -- we consider y to be normalized
         // potential bug: shouldn't it be yk->at(i, 0) instead of yk->at(i, 1) ? (fixed)
     }
 
@@ -180,7 +180,7 @@ void stograd::compute_dvk(int k, mat &theta, vec &s, vm &dalpha, vm &dvk)
             dvk[i + od->bSize](nBasis * od->nDim + j, 0) = phi(j);
             // since dvki/ds = -d(Phi(xki)' * s)/ds = -Phi(xki) = -phi, dvki/dsj = -phi(j) -- we will deal with the minus sign later
         xki.clear(); // clear memory
-        dvk[i + od->bSize] *= -1.0; // since dvki = dyki - d(Phi(xki)' * s) = -d(Phi(xki)' * s)
+        dvk[i + od->bSize] *= (-1.0 / od->gamma); // since dvki = dyki - d(Phi(xki)' * s) = -d(Phi(xki)' * s)
     }
 
     NFOR(i, j, od->bSize, alpha_size) // since dvki/db = (dalpha/db) * dvki/dalpha = I * dvki/dalpha = dvki/dalpha, we have already got dvki/db stored in the second half of dvk
@@ -202,5 +202,5 @@ void stograd::compute_rk(vec &vk, vm &dvk, vec &rk) // compute rk = [rk(u)]' whe
             rk[SQR(alpha_size) + Mr] += dvk[i + od->bSize](Mr, 0) * vk(i, 0); // compute rk[u] = \sum_i (dvki/du * vki)
     }
 
-    rk *= 2.0 / SQR(od->noise); // remember rk[u] = (2.0 / noise^2) * (dvk/du)' * vk so we have to multiply the final result by (2.0 / noise^2)
+    rk *= (2.0 / SQR(od->noise)); // remember rk[u] = (2.0 / noise^2) * (dvk/du)' * vk so we have to multiply the final result by (2.0 / noise^2)
 }

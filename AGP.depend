@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1461166952 source:e:\codes\agp\basis.cpp
+1463075717 source:e:\codes\agp\basis.cpp
 	"basis.h"
 
 1461165595 e:\codes\agp\basis.h
@@ -34,7 +34,7 @@
 1462454555 e:\codes\agp\configuration.h
 	"libhead.h"
 
-1462043295 source:e:\codes\agp\kmean.cpp
+1463066189 source:e:\codes\agp\kmean.cpp
 	"kmean.h"
 
 1453649145 e:\codes\agp\kmean.h
@@ -52,7 +52,7 @@
 
 1460183392 e:\codes\agp\loader.h
 
-1462518085 source:e:\codes\agp\main.cpp
+1463121017 source:e:\codes\agp\main.cpp
 	"libhead.h"
 	"configuration.h"
 	"optimizer.h"
@@ -66,7 +66,7 @@
 	"configuration.h"
 	"predictor.h"
 
-1462447249 e:\codes\agp\organized.h
+1463060708 e:\codes\agp\organized.h
 	"libhead.h"
 	"raw.h"
 	"kmean.h"
@@ -76,24 +76,24 @@
 	"basis.h"
 	"organized.h"
 
-1462867678 e:\codes\agp\predictor.h
+1463066142 e:\codes\agp\predictor.h
 	"libhead.h"
 	"organized.h"
 	"basis.h"
 	"configuration.h"
 
-1462867705 source:e:\codes\agp\optimizer.cpp
+1463066759 source:e:\codes\agp\optimizer.cpp
 	"optimizer.h"
 
 1462505793 source:e:\codes\agp\organized.cpp
 	"organized.h"
 
-1462895088 source:e:\codes\agp\predictor.cpp
+1463116706 source:e:\codes\agp\predictor.cpp
 	"predictor.h"
 
 1462440869 source:e:\codes\agp\raw.cpp
 	"raw.h"
 
-1462507632 source:e:\codes\agp\stograd.cpp
+1463111595 source:e:\codes\agp\stograd.cpp
 	"stograd.h"
 
